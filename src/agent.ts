@@ -2,11 +2,27 @@ import Anthropic from "@anthropic-ai/sdk";
 import type {
   ContentBlockParam,
   MessageParam,
+  TextBlockParam,
   ToolUseBlock,
 } from "@anthropic-ai/sdk/resources/messages";
 
 import { config, requireApiKey } from "./config.js";
 import { runTool, tools } from "./tools/index.js";
+
+/**
+ * Cached system prompt block. Hoisted to module scope so the reference
+ * (and content) is stable across turns. Anthropic's prompt cache is
+ * content-keyed, not identity-keyed, but a stable reference makes it
+ * obvious to a future maintainer that this is meant to be cacheable —
+ * mutating it per turn would silently invalidate the cache.
+ */
+const systemBlocks: TextBlockParam[] = [
+  {
+    type: "text",
+    text: config.systemPrompt,
+    cache_control: { type: "ephemeral" },
+  },
+];
 
 /**
  * Agent loop.
@@ -32,13 +48,7 @@ export async function run(userPrompt: string): Promise<void> {
     const stream = client.messages.stream({
       model: config.model,
       max_tokens: config.maxTokens,
-      system: [
-        {
-          type: "text",
-          text: config.systemPrompt,
-          cache_control: { type: "ephemeral" },
-        },
-      ],
+      system: systemBlocks,
       tools,
       messages,
     });
@@ -50,6 +60,10 @@ export async function run(userPrompt: string): Promise<void> {
     const final = await stream.finalMessage();
     process.stdout.write("\n");
 
+    // The assistant turn must be echoed back into `messages` so the next
+    // request includes the model's previous reply (Anthropic protocol).
+    // The system prompt and tools array are cached, so only the new
+    // assistant + user blocks add to the next turn's billed input tokens.
     messages.push({ role: "assistant", content: final.content });
 
     if (final.stop_reason !== "tool_use") {
@@ -57,6 +71,13 @@ export async function run(userPrompt: string): Promise<void> {
     }
 
     const toolUses = final.content.filter((b): b is ToolUseBlock => b.type === "tool_use");
+
+    // Defensive: if the model claimed `tool_use` but emitted no tool_use
+    // blocks, the API rejects an empty user message on the next turn.
+    // Treat this as an early stop.
+    if (toolUses.length === 0) {
+      return;
+    }
 
     const toolResults: ContentBlockParam[] = await Promise.all(
       toolUses.map(async (tu) => {
@@ -72,7 +93,8 @@ export async function run(userPrompt: string): Promise<void> {
     messages.push({ role: "user", content: toolResults });
   }
 
-  process.stdout.write(
+  process.stderr.write(
     `\n[stopped: hit max turn limit (${maxTurns}). The agent looped without finishing.]\n`,
   );
+  process.exitCode = 1;
 }

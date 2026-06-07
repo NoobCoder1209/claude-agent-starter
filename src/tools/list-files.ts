@@ -1,6 +1,8 @@
-import { readdirSync, statSync, realpathSync } from "node:fs";
-import { resolve, relative } from "node:path";
+import { readdirSync, statSync } from "node:fs";
+import { resolve } from "node:path";
 import { z } from "zod";
+
+import { resolveInSandbox } from "./sandbox.js";
 
 export const listFilesSchema = z.object({
   dir: z.string().default("."),
@@ -26,32 +28,13 @@ export const listFilesToolDefinition = {
   },
 };
 
-function inSandbox(sandboxDir: string, candidate: string): boolean {
-  if (candidate === sandboxDir) return true;
-  const rel = relative(sandboxDir, candidate);
-  return rel !== "" && !rel.startsWith("..") && !rel.startsWith("/");
-}
-
 export async function listFilesHandler(input: ListFilesInput, sandboxDir: string): Promise<string> {
-  const requested = resolve(sandboxDir, input.dir);
-  if (!inSandbox(sandboxDir, requested)) {
-    return "Refused: path is outside the sandbox.";
-  }
-
-  let real: string;
-  try {
-    real = realpathSync(requested);
-  } catch {
-    return `Directory not found: ${input.dir}`;
-  }
-
-  if (!inSandbox(sandboxDir, real)) {
-    return "Refused: resolved path is outside the sandbox.";
-  }
+  const resolved = resolveInSandbox(sandboxDir, input.dir);
+  if (!resolved.ok) return resolved.reason;
 
   let entries: string[];
   try {
-    entries = readdirSync(real);
+    entries = readdirSync(resolved.real);
   } catch (err) {
     return `Could not list directory: ${err instanceof Error ? err.message : String(err)}`;
   }
@@ -60,7 +43,7 @@ export async function listFilesHandler(input: ListFilesInput, sandboxDir: string
 
   const annotated = entries.sort().map((name) => {
     try {
-      const isDir = statSync(resolve(real, name)).isDirectory();
+      const isDir = statSync(resolve(resolved.real, name)).isDirectory();
       return isDir ? `${name}/` : name;
     } catch {
       return name;

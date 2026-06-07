@@ -86,7 +86,7 @@ pnpm agent -- "What's in this corpus?"
                             └──────► loop
 ```
 
-The whole loop is **~70 lines** in [`src/agent.ts`](./src/agent.ts). The tool-use protocol is [documented by Anthropic here](https://docs.claude.com/en/docs/agents-and-tools/tool-use/handle-tool-calls).
+The whole loop is **about 100 lines** in [`src/agent.ts`](./src/agent.ts) — most of which is comments. The tool-use protocol is [documented by Anthropic here](https://docs.claude.com/en/docs/agents-and-tools/tool-use/handle-tool-calls).
 
 ### A note on caching
 
@@ -108,9 +108,12 @@ claude-agent-starter/
 │   │   └── system.md         # the long, cached system prompt
 │   └── tools/
 │       ├── index.ts          # tools registry + dispatcher
+│       ├── sandbox.ts        # path-traversal protection (shared by tools)
 │       ├── read-file.ts      # sandboxed file read
 │       └── list-files.ts     # sandboxed directory list
 ├── sample-corpus/            # 3 short Markdown files the agent reads
+├── scripts/
+│   └── count-tokens.ts       # verifies the system prompt clears the cache minimum
 ├── test/
 │   └── agent.smoke.test.ts   # SDK-mocked smoke test for the loop
 └── .github/workflows/ci.yml  # install · lint · typecheck · test on Node 20

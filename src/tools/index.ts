@@ -22,6 +22,8 @@ export const tools: ToolUnion[] = [
 
 type ToolName = "read_file" | "list_files";
 
+const TOOL_NAMES = ["read_file", "list_files"] as const satisfies readonly ToolName[];
+
 const handlers: Record<ToolName, (input: unknown, sandboxDir: string) => Promise<string>> = {
   read_file: async (input, sandboxDir) => {
     const parsed = readFileSchema.parse(input);
@@ -34,7 +36,7 @@ const handlers: Record<ToolName, (input: unknown, sandboxDir: string) => Promise
 };
 
 function isKnownTool(name: string): name is ToolName {
-  return name === "read_file" || name === "list_files";
+  return (TOOL_NAMES as readonly string[]).includes(name);
 }
 
 /**

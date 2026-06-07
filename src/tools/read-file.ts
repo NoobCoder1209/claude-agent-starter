@@ -1,6 +1,7 @@
-import { readFileSync, realpathSync } from "node:fs";
-import { resolve, relative } from "node:path";
+import { readFileSync } from "node:fs";
 import { z } from "zod";
+
+import { resolveInSandbox } from "./sandbox.js";
 
 export const readFileSchema = z.object({
   path: z.string().min(1, "path must be a non-empty string"),
@@ -25,30 +26,12 @@ export const readFileToolDefinition = {
   },
 };
 
-function inSandbox(sandboxDir: string, candidate: string): boolean {
-  const rel = relative(sandboxDir, candidate);
-  return rel !== "" && !rel.startsWith("..") && !rel.startsWith("/");
-}
-
 export async function readFileHandler(input: ReadFileInput, sandboxDir: string): Promise<string> {
-  const requested = resolve(sandboxDir, input.path);
-  if (!inSandbox(sandboxDir, requested)) {
-    return "Refused: path is outside the sandbox.";
-  }
-
-  let real: string;
-  try {
-    real = realpathSync(requested);
-  } catch {
-    return `File not found: ${input.path}`;
-  }
-
-  if (!inSandbox(sandboxDir, real)) {
-    return "Refused: resolved path is outside the sandbox.";
-  }
+  const resolved = resolveInSandbox(sandboxDir, input.path);
+  if (!resolved.ok) return resolved.reason;
 
   try {
-    return readFileSync(real, "utf8");
+    return readFileSync(resolved.real, "utf8");
   } catch (err) {
     return `Could not read file: ${err instanceof Error ? err.message : String(err)}`;
   }

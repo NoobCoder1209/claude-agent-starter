@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
 const here = dirname(fileURLToPath(import.meta.url));
+const projectRoot = resolve(here, "..");
 
 function loadSystemPrompt(): string {
   return readFileSync(resolve(here, "prompts/system.md"), "utf8");
@@ -21,8 +22,6 @@ export function requireApiKey(): string {
 export const config = {
   model: "claude-sonnet-4-6",
   maxTokens: 4096,
-  sandboxDir: resolve(process.cwd(), "sample-corpus"),
+  sandboxDir: resolve(projectRoot, "sample-corpus"),
   systemPrompt: loadSystemPrompt(),
 } as const;
-
-export type AgentConfig = typeof config;
