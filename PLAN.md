@@ -73,6 +73,15 @@ Before writing code, surface these (these are theirs):
 6. **CLI shape** — one entrypoint: `pnpm agent -- "your question"`.
 7. README with title, GIF or screenshot of one full run, "What it shows", "Skills demonstrated", quick start, "How it works" diagram.
 
+## Production hygiene (must apply, not optional)
+
+Inherits the master plan's "Production hygiene checklist." Repo-specific application:
+
+- **Env vars at runtime, never committed.** `.env.example` ships placeholders; `.env*` gitignored; `config.ts` throws a clean error if `ANTHROPIC_API_KEY` is missing.
+- **Validate tool inputs with `zod`.** Each tool defines a zod schema; the dispatcher validates before calling the handler. Bad input → friendly error returned to the model, never a thrown exception.
+- **Global try/catch in CLI entrypoint.** `src/index.ts` wraps `agent.run()` in try/catch. On error: print one short, actionable line to stderr (e.g. `"Missing ANTHROPIC_API_KEY. Set it in .env or your shell."`) and exit non-zero. **No stack traces shown to the user** unless `--verbose` (deferred).
+- **Sandbox path traversal.** Already in scope; reinforce: any path resolving outside the sandbox dir → friendly rejection, never a raw filesystem error.
+
 ## Out of scope (do NOT silently expand)
 
 - No web UI, no server, no deployment.
@@ -236,8 +245,10 @@ Capture GIF. Tick verification. **Ask the user** before flipping public.
 - [ ] `pnpm agent -- "Find the file about famous cats and summarise it."` runs end-to-end with a real key
 - [ ] `pnpm lint`, `pnpm test`, `pnpm exec tsc --noEmit` green locally and in CI
 - [ ] README has a real GIF or 2+ screenshots
-- [ ] No keys in git history
+- [ ] No keys in git history (`git log -p | grep -iE 'sk-|anthropic.{0,5}=' ` finds nothing)
 - [ ] `.env.example` exists, `.env` is `.gitignore`d
+- [ ] Missing API key produces a one-line friendly error, not a stack trace
+- [ ] Bad tool input (zod-rejected) returns a friendly tool result, not an exception
 - [ ] Topics set: `claude`, `claude-api`, `anthropic`, `ai-agent`, `typescript`, `prompt-caching`, `tool-use`
 - [ ] Repo description matches master plan
 - [ ] Sandbox traversal protection works (`pnpm agent -- "read ../../etc/passwd"` rejected)
