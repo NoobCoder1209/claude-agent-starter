@@ -1,6 +1,7 @@
 # `claude-agent-starter` — Operator's guide
 
 > **Last verified:** 2026-06-09 against `main` at commit `d829e8d` (the head of `main` when this guide was written). All non-API checks passed; live API call not exercised — see [Demo verification status](#demo-verification-status).
+> If `main` has advanced since this timestamp, re-run the verification block in [§5](#5-how-to-verify-the-demo-actually-worked) to refresh confidence before relying on the guide.
 > Verified autonomously: `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm lint`, `pnpm test` (4/4 passing), and the missing-key error path (`pnpm agent` with no `ANTHROPIC_API_KEY` exits 1 with the documented one-line message).
 
 This is the practical guide for running `claude-agent-starter` end-to-end. If you've never touched the repo before, start here. The high-level pitch lives in [`README.md`](./README.md); this file is the runbook.
@@ -85,7 +86,7 @@ claude-agent-starter/
 ├── vitest.config.ts           ← Vitest test runner config.
 ├── .prettierrc                ← Formatter rules.
 ├── .gitignore                 ← node_modules, dist, .env*, etc.
-├── .env.example               ← Empty placeholder for ANTHROPIC_API_KEY.
+├── .env.example               ← Template with an empty `ANTHROPIC_API_KEY=` line for you to fill in.
 ├── .github/workflows/ci.yml   ← GitHub Actions: install · lint · typecheck · test on Node 20.
 │
 ├── src/
@@ -96,7 +97,7 @@ claude-agent-starter/
 │   ├── prompts/
 │   │   └── system.md          ← The agent's persona ("Sage"). Sized above the 1024-token cache minimum.
 │   └── tools/
-│       ├── index.ts           ← Tool registry + runTool() dispatcher. cache_control on the last tool.
+│       ├── index.ts           ← Tool registry + runTool() dispatcher. cache_control on the last tool (currently `list_files`).
 │       ├── sandbox.ts         ← resolveInSandbox(): path-traversal + symlink-escape protection.
 │       ├── read-file.ts       ← read_file tool (zod-validated).
 │       └── list-files.ts      ← list_files tool (zod-validated).
@@ -128,10 +129,10 @@ If you want to read just three files to understand how it works, in this order:
 
 There is exactly **one** secret: `ANTHROPIC_API_KEY`.
 
-| Variable            | Required            | Used by                                 | What happens if missing                   |
-| ------------------- | ------------------- | --------------------------------------- | ----------------------------------------- |
-| `ANTHROPIC_API_KEY` | Yes (for live runs) | `pnpm agent`, `scripts/count-tokens.ts` | Prints a one-line friendly error, exits 1 |
-| _(none others)_     | —                   | —                                       | —                                         |
+| Variable            | Required            | Used by                           | What happens if missing                   |
+| ------------------- | ------------------- | --------------------------------- | ----------------------------------------- |
+| `ANTHROPIC_API_KEY` | Yes (for live runs) | `pnpm agent`, `pnpm count-tokens` | Prints a one-line friendly error, exits 1 |
+| _(none others)_     | —                   | —                                 | —                                         |
 
 ### Where to put it
 
@@ -178,8 +179,8 @@ You can run all three with no key set, in any environment.
 ### a. Static checks pass (no key needed)
 
 ```bash
-pnpm typecheck   # exits 0, no output on success
-pnpm lint        # exits 0, no output on success
+pnpm typecheck   # prints pnpm's script banner, then exits 0 with no further output
+pnpm lint        # prints pnpm's script banner, then exits 0 with no further output
 pnpm test        # prints "Tests  4 passed (4)", exits 0
 ```
 
@@ -226,7 +227,7 @@ The model calls `read_file` with an escaping path; the runtime returns `Refused:
 ### d. Caching margin is healthy (key required, but free — no billing)
 
 ```bash
-pnpm exec tsx scripts/count-tokens.ts
+pnpm count-tokens
 ```
 
 Expected output:

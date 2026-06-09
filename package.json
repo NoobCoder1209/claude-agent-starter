@@ -15,7 +15,8 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "count-tokens": "tsx scripts/count-tokens.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.102.0",

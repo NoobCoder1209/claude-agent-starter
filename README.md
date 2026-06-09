@@ -129,11 +129,12 @@ claude-agent-starter/
 ## Scripts
 
 ```bash
-pnpm agent "prompt"      # run the agent
-pnpm test                # run the smoke test (no API key needed; SDK is mocked)
-pnpm typecheck           # tsc --noEmit
-pnpm lint                # eslint
-pnpm format              # prettier --write
+pnpm agent "prompt"   # run the agent (needs ANTHROPIC_API_KEY)
+pnpm test             # run the smoke tests (SDK mocked, no key needed)
+pnpm typecheck        # tsc --noEmit
+pnpm lint             # eslint
+pnpm format           # prettier --write
+pnpm count-tokens     # verify the system prompt clears the cache minimum
 ```
 
 ---
