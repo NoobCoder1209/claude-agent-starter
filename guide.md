@@ -1,8 +1,7 @@
 # `claude-agent-starter` — Operator's guide
 
-> **Last verified:** 2026-06-09 · branch `feature/guide-and-demo-verification`
-> Verified non-API steps autonomously: `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm lint`, `pnpm test` (4/4 passing), and the missing-key error path (`pnpm agent` with no `ANTHROPIC_API_KEY` exits 1 with the documented one-line message).
-> The live API call (`pnpm agent "<prompt>"` with a real key) was **not** run autonomously — see [Demo verification status](#demo-verification-status) below.
+> **Last verified:** 2026-06-09 against `main` at commit `d829e8d` (the head of `main` when this guide was written). All non-API checks passed; live API call not exercised — see [Demo verification status](#demo-verification-status).
+> Verified autonomously: `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm lint`, `pnpm test` (4/4 passing), and the missing-key error path (`pnpm agent` with no `ANTHROPIC_API_KEY` exits 1 with the documented one-line message).
 
 This is the practical guide for running `claude-agent-starter` end-to-end. If you've never touched the repo before, start here. The high-level pitch lives in [`README.md`](./README.md); this file is the runbook.
 
@@ -269,7 +268,7 @@ If you hit something not listed, the first-line debug move is `pnpm agent "..." 
 
 Reason: this machine has no `ANTHROPIC_API_KEY` set, and the user has not provided one to the running session. The agent's network call therefore could not be exercised autonomously.
 
-What **was** verified autonomously, on commit `<filled in by PR>` of branch `feature/guide-and-demo-verification`:
+What **was** verified autonomously, against `main` at commit `d829e8d`:
 
 1. ✅ `pnpm install --frozen-lockfile` — clean, lockfile in sync
 2. ✅ `pnpm typecheck` — no type errors
