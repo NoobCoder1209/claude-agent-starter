@@ -39,15 +39,15 @@ cp .env.example .env
 export ANTHROPIC_API_KEY=sk-ant-...
 
 # 3. Ask the agent something
-pnpm agent -- "List the files in the corpus, then read the most interesting one and tell me why."
+pnpm agent "List the files in the corpus, then read the most interesting one and tell me why."
 ```
 
 You'll see the answer stream out token-by-token. Try a few prompts:
 
 ```bash
-pnpm agent -- "Compare Elden Ring and Baldur's Gate 3 in two paragraphs."
-pnpm agent -- "Which of the three games sold the most copies, according to the corpus?"
-pnpm agent -- "What's in this corpus?"
+pnpm agent "Compare Elden Ring and Baldur's Gate 3 in two paragraphs."
+pnpm agent "Which of the three games sold the most copies, according to the corpus?"
+pnpm agent "What's in this corpus?"
 ```
 
 ---
@@ -129,7 +129,7 @@ claude-agent-starter/
 ## Scripts
 
 ```bash
-pnpm agent -- "prompt"   # run the agent
+pnpm agent "prompt"      # run the agent
 pnpm test                # run the smoke test (no API key needed; SDK is mocked)
 pnpm typecheck           # tsc --noEmit
 pnpm lint                # eslint
